@@ -1,0 +1,12 @@
+{
+  "name": "datalayer-crawl",
+  "version": "1.0.0",
+  "description": "Crawl a URL and extract all GTM dataLayer.push() calls and their containing scripts",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
