@@ -153,9 +153,27 @@ async function crawl(url) {
   const pushFile = path.join(process.cwd(), `./output/${timestamp}/datalayer-pushes.json`);
   fs.writeFileSync(pushFile, JSON.stringify(eventPushes, null, 2));
 
+  // CSV export of pushes
+  const csvFile = path.join(process.cwd(), `./output/${timestamp}/datalayer-pushes.csv`);
+  // Collect all unique keys from arguments
+  const allKeys = [...new Set(eventPushes.flatMap((p) =>
+    typeof p.argument === "object" && p.argument !== null ? Object.keys(p.argument) : []
+  ))];
+  const csvHeaders = ["source", "type", ...allKeys];
+  const escapeCsv = (val) => {
+    const str = val == null ? "" : String(val);
+    return str.includes(",") || str.includes('"') || str.includes("\n")
+      ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+  const csvRows = eventPushes.map((p) => {
+    const arg = typeof p.argument === "object" && p.argument !== null ? p.argument : {};
+    return [p.source, p.type, ...allKeys.map((k) => escapeCsv(arg[k] ?? ""))].join(",");
+  });
+  fs.writeFileSync(csvFile, [csvHeaders.join(","), ...csvRows].join("\n"));
+
   console.log(`\nFound ${results.length} script(s) containing dataLayer.push`);
   console.log(`Found ${pushObjects.length} dataLayer.push() call(s), ${eventPushes.length} with an "event" property`);
-  console.log(`Results saved to:\n  ${outFile}\n  ${jsFile}\n  ${pushFile}\n`);
+  console.log(`Results saved to:\n  ${outFile}\n  ${jsFile}\n  ${pushFile}\n  ${csvFile}\n`);
 
   for (const r of results) {
     console.log(`--- [${r.type}] ${r.source} ---`);
